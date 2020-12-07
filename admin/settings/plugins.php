@@ -167,6 +167,42 @@ if ($hassiteconfig) {
     $ADMIN->add('modules', new admin_category('antivirussettings', new lang_string('antiviruses', 'antivirus')));
     $temp = new admin_settingpage('manageantiviruses', new lang_string('antivirussettings', 'antivirus'));
     $temp->add(new admin_setting_manageantiviruses());
+
+    // Common settings.
+    $temp->add(new admin_setting_heading('antiviruscommonsettings', new lang_string('antiviruscommonsettings', 'antivirus'), ''));
+
+    // Alert email.
+    $temp->add(
+        new admin_setting_configtext(
+            'antivirus/notifyemail',
+            new lang_string('notifyemail', 'antivirus'),
+            new lang_string('notifyemail_help', 'antivirus'),
+            '',
+            PARAM_EMAIL
+        )
+    );
+
+    // Enable quarantine.
+    $temp->add(
+        new admin_setting_configcheckbox(
+            'antivirus/enablequarantine',
+            new lang_string('enablequarantine', 'antivirus'),
+            new lang_string('enablequarantine_help', 'antivirus',
+            \core\antivirus\quarantine::DEFAULT_QUARANTINE_FOLDER),
+            0
+        )
+    );
+
+    // Quarantine time.
+    $temp->add(
+        new admin_setting_configduration(
+            'antivirus/quarantinetime',
+            new lang_string('quarantinetime', 'antivirus'),
+            new lang_string('quarantinetime_desc', 'antivirus'),
+            \core\antivirus\quarantine::DEFAULT_QUARANTINE_TIME
+        )
+    );
+
     $ADMIN->add('antivirussettings', $temp);
     $plugins = core_plugin_manager::instance()->get_plugins_of_type('antivirus');
     core_collator::asort_objects_by_property($plugins, 'displayname');
@@ -242,6 +278,25 @@ if ($hassiteconfig) {
     foreach ($plugins as $plugin) {
         /** @var \core\plugininfo\media $plugin */
         $plugin->load_settings($ADMIN, 'mediaplayers', $hassiteconfig);
+    }
+
+    // Payment gateway plugins.
+    $ADMIN->add('modules', new admin_category('paymentgateways', new lang_string('type_paygw_plural', 'plugin')));
+    $temp = new admin_settingpage('managepaymentgateways', new lang_string('type_paygwmanage', 'plugin'));
+    $temp->add(new \core_admin\local\settings\manage_payment_gateway_plugins());
+    $temp->add(new admin_setting_description(
+        'managepaymentgatewayspostfix',
+        '',
+        new lang_string('gotopaymentaccounts', 'payment',
+            html_writer::link(new moodle_url('/payment/accounts.php'), get_string('paymentaccounts', 'payment')))
+    ));
+    $ADMIN->add('paymentgateways', $temp);
+
+    $plugins = core_plugin_manager::instance()->get_plugins_of_type('paygw');
+    core_collator::asort_objects_by_property($plugins, 'displayname');
+    foreach ($plugins as $plugin) {
+        /** @var \core\plugininfo\paygw $plugin */
+        $plugin->load_settings($ADMIN, 'paymentgateways', $hassiteconfig);
     }
 
     // Data format settings.

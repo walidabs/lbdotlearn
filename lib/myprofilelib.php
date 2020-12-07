@@ -62,9 +62,7 @@ function core_myprofile_navigation(core_user\output\myprofile\tree $tree, $user,
     // Add core nodes.
     // Full profile node.
     if (!empty($course)) {
-        if (empty($CFG->forceloginforprofiles) || $iscurrentuser ||
-            has_capability('moodle/user:viewdetails', $usercontext)
-            || has_coursecontact_role($user->id)) {
+        if (user_can_view_profile($user, null, $usercontext)) {
             $url = new moodle_url('/user/profile.php', array('id' => $user->id));
             $node = new core_user\output\myprofile\node('miscellaneous', 'fullprofile', get_string('fullprofile'), null, $url);
             $tree->add_node($node);
@@ -331,8 +329,8 @@ function core_myprofile_navigation(core_user\output\myprofile\tree $tree, $user,
     }
 
     if ($user->icq && !isset($hiddenfields['icqnumber'])) {
-        $imurl = new moodle_url('http://web.icq.com/wwp', array('uin' => $user->icq) );
-        $iconurl = new moodle_url('http://web.icq.com/whitepages/online', array('icq' => $user->icq, 'img' => '5'));
+        $imurl = new moodle_url('https://web.icq.com/wwp', array('uin' => $user->icq) );
+        $iconurl = new moodle_url('https://web.icq.com/whitepages/online', array('icq' => $user->icq, 'img' => '5'));
         $statusicon = html_writer::tag('img', '',
                 array('src' => $iconurl, 'class' => 'icon icon-post', 'alt' => get_string('status')));
         $node = new core_user\output\myprofile\node('contact', 'icqnumber', get_string('icqnumber'), null, null,
@@ -356,7 +354,7 @@ function core_myprofile_navigation(core_user\output\myprofile\tree $tree, $user,
         $tree->add_node($node);
     }
     if ($user->yahoo && !isset($hiddenfields['yahooid'])) {
-        $imurl = new moodle_url('http://edit.yahoo.com/config/send_webmesg', array('.target' => $user->yahoo, '.src' => 'pg'));
+        $imurl = new moodle_url('https://edit.yahoo.com/config/send_webmesg', array('.target' => $user->yahoo, '.src' => 'pg'));
         $iconurl = new moodle_url('http://opi.yahoo.com/online', array('u' => $user->yahoo, 'm' => 'g', 't' => '0'));
         $statusicon = html_writer::tag('img', '',
             array('src' => $iconurl, 'class' => 'iconsmall icon-post', 'alt' => get_string('status')));

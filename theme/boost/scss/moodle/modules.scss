@@ -1159,9 +1159,14 @@ div#dock {
     clear: left;
 }
 #page-mod-quiz-mod #id_reviewoptionshdr .form-check {
-    width: 90%;
+    width: auto;
     height: 22px;
     justify-content: flex-start;
+}
+
+#page-mod-quiz-mod #id_reviewoptionshdr .review_option_item {
+    width: 90%;
+    height: 22px;
 }
 
 // Question navigation block.
@@ -1263,6 +1268,34 @@ div#dock {
 #page-mod-quiz-edit ul.slots li.section li.activity .instancemaxmarkcontainer {
     padding: 0;
     margin: 0 0.4em;
+}
+
+/* Countdown timer. */
+#page-mod-quiz-attempt #region-main {
+    overflow-x: inherit;
+}
+
+#quiz-timer-wrapper {
+    display: none;
+    position: sticky;
+    justify-content: end;
+    top: $navbar-height + 5px;
+    z-index: $zindex-sticky;
+    #quiz-timer {
+        border: $border-width solid $red;
+        background-color: $white;
+    }
+}
+.pagelayout-embedded #quiz-timer-wrapper {
+    top: 5px;
+}
+
+@for $i from 0 through 16 {
+    #quiz-timer-wrapper #quiz-timer.timeleft#{$i} {
+        $bg: lighten($red, ($i * 3%));
+        background-color: $bg;
+        color: color-yiq($bg);
+    }
 }
 
 // Assign.

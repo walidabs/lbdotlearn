@@ -22,6 +22,8 @@
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use core_admin\local\settings\filesize;
+
 $capabilities = array(
     'moodle/backup:backupcourse',
     'moodle/category:manage',
@@ -74,6 +76,17 @@ if ($hassiteconfig or has_any_capability($capabilities, $systemcontext)) {
     $choices['1'] = new lang_string('show');
     $temp->add(new admin_setting_configselect('moodlecourse/visible', new lang_string('visible'), new lang_string('visible_help'),
         1, $choices));
+
+    // Enable/disable download course content.
+    $choices = [
+        DOWNLOAD_COURSE_CONTENT_DISABLED => new lang_string('no'),
+        DOWNLOAD_COURSE_CONTENT_ENABLED => new lang_string('yes'),
+    ];
+    $downloadcontentsitedefault = new admin_setting_configselect('moodlecourse/downloadcontentsitedefault',
+            new lang_string('enabledownloadcoursecontent', 'course'),
+            new lang_string('downloadcoursecontent_help', 'course'), 0, $choices);
+    $downloadcontentsitedefault->add_dependent_on('downloadcoursecontentallowed');
+    $temp->add($downloadcontentsitedefault);
 
     // Course format.
     $temp->add(new admin_setting_heading('courseformathdr', new lang_string('type_format', 'plugin'), ''));
@@ -158,6 +171,21 @@ if ($hassiteconfig or has_any_capability($capabilities, $systemcontext)) {
     $choices[VISIBLEGROUPS] = new lang_string('groupsvisible', 'group');
     $temp->add(new admin_setting_configselect('moodlecourse/groupmode', new lang_string('groupmode'), '', key($choices),$choices));
     $temp->add(new admin_setting_configselect('moodlecourse/groupmodeforce', new lang_string('force'), new lang_string('coursehelpforce'), 0,array(0 => new lang_string('no'), 1 => new lang_string('yes'))));
+
+    $ADMIN->add('courses', $temp);
+
+    // Download course content.
+    $downloadcoursedefaulturl = new moodle_url('/admin/settings.php', ['section' => 'coursesettings']);
+    $temp = new admin_settingpage('downloadcoursecontent', new lang_string('downloadcoursecontent', 'course'));
+    $temp->add(new admin_setting_configcheckbox('downloadcoursecontentallowed',
+            new lang_string('downloadcoursecontentallowed', 'admin'),
+            new lang_string('downloadcoursecontentallowed_desc', 'admin', $downloadcoursedefaulturl->out()), 0));
+
+    // 50MB default maximum size per file when downloading course content.
+    $defaultmaxdownloadsize = 50 * filesize::UNIT_MB;
+    $temp->add(new filesize('maxsizeperdownloadcoursefile', new lang_string('maxsizeperdownloadcoursefile', 'admin'),
+            new lang_string('maxsizeperdownloadcoursefile_desc', 'admin'), $defaultmaxdownloadsize, filesize::UNIT_MB));
+    $temp->hide_if('maxsizeperdownloadcoursefile', 'downloadcoursecontentallowed');
 
     $ADMIN->add('courses', $temp);
 
@@ -285,6 +313,9 @@ if ($hassiteconfig or has_any_capability($capabilities, $systemcontext)) {
         ['value' => 1, 'locked' => 0])
     );
 
+    $temp->add(new admin_setting_configcheckbox_with_lock('backup/backup_general_legacyfiles',
+        new lang_string('generallegacyfiles', 'backup'),
+        new lang_string('configlegacyfiles', 'backup'), array('value' => 1, 'locked' => 0)));
     $ADMIN->add('backups', $temp);
 
     // Create a page for general import configuration and defaults.
@@ -311,6 +342,9 @@ if ($hassiteconfig or has_any_capability($capabilities, $systemcontext)) {
         new lang_string('configgeneralcontentbankcontent', 'backup'),
         ['value' => 1, 'locked' => 0])
     );
+    $temp->add(new admin_setting_configcheckbox_with_lock('backup/backup_import_legacyfiles',
+        new lang_string('generallegacyfiles', 'backup'),
+        new lang_string('configlegacyfiles', 'backup'), array('value' => 1, 'locked' => 0)));
 
     $ADMIN->add('backups', $temp);
 
@@ -437,6 +471,10 @@ if ($hassiteconfig or has_any_capability($capabilities, $systemcontext)) {
         1)
     );
 
+    $temp->add(new admin_setting_configcheckbox('backup/backup_auto_legacyfiles',
+        new lang_string('generallegacyfiles', 'backup'),
+        new lang_string('configlegacyfiles', 'backup'), 1));
+
     //$temp->add(new admin_setting_configcheckbox('backup/backup_auto_messages', new lang_string('messages', 'message'), new lang_string('backupmessageshelp','message'), 0));
     //$temp->add(new admin_setting_configcheckbox('backup/backup_auto_blogs', new lang_string('blogs', 'blog'), new lang_string('backupblogshelp','blog'), 0));
 
@@ -499,6 +537,9 @@ if ($hassiteconfig or has_any_capability($capabilities, $systemcontext)) {
     $temp->add(new admin_setting_configcheckbox_with_lock('restore/restore_general_contentbankcontent',
         new lang_string('generalcontentbankcontent', 'backup'),
         new lang_string('configrestorecontentbankcontent', 'backup'), array('value' => 1, 'locked' => 0)));
+    $temp->add(new admin_setting_configcheckbox_with_lock('restore/restore_general_legacyfiles',
+        new lang_string('generallegacyfiles', 'backup'),
+        new lang_string('configlegacyfiles', 'backup'), array('value' => 1, 'locked' => 0)));
 
     // Restore defaults when merging into another course.
     $temp->add(new admin_setting_heading('mergerestoredefaults', new lang_string('mergerestoredefaults', 'backup'), ''));

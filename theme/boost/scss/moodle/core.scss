@@ -166,11 +166,11 @@ input[type="radio"],
 input[type="file"],
 input[type="image"],
 .sr-only-focusable,
-a.dropdown-item,
 a.dropdown-toggle,
 .modal-dialog[tabindex="0"],
 .moodle-dialogue-base .closebutton,
-button.close {
+button.close,
+.form-autocomplete-selection {
     &.focus,
     &:focus {
         outline: 0;
@@ -181,6 +181,12 @@ button.close {
     }
 }
 
+// Accessible focus styling for autocomplete elements.
+.form-autocomplete-suggestions li[aria-selected=true] {
+    outline: 0;
+    box-shadow: $input-btn-focus-box-shadow;
+}
+
 // Safari does not allow custom styling of checkboxes.
 .safari {
     input[type="checkbox"],
@@ -189,19 +195,6 @@ button.close {
         &:focus {
             outline: auto;
         }
-    }
-}
-
-.usermenu,
-div.dropdown-item {
-    a,
-    a[role="button"] {
-        outline: 0;
-        box-shadow: none;
-    }
-    &:focus-within {
-        outline: 0;
-        box-shadow: $input-btn-focus-box-shadow;
     }
 }
 
@@ -217,6 +210,18 @@ div.dropdown-item {
     list-style: none;
     margin: 0;
     padding: 0;
+}
+
+.section li.movehere a {
+    display: block;
+    width: 100%;
+    height: 2rem;
+    border: 2px dashed $gray-800;
+}
+
+.editing .course-content .hidden.sectionname {
+    visibility: hidden;
+    display: initial;
 }
 
 .inline,
@@ -1642,6 +1647,9 @@ body#page-lib-editor-tinymce-plugins-moodlemedia-preview {
     .carousel-item .loading-icon .icon {
         margin: 1em auto;
     }
+    .searchbar {
+        width: 100%;
+    }
 }
 
 .modchooser .modal-footer {
@@ -1658,19 +1666,6 @@ body#page-lib-editor-tinymce-plugins-moodlemedia-preview {
 
 .modchoosercontainer.noscroll {
     overflow-y: hidden;
-}
-
-.modchooser .searchcontainer .searchbar .input-group-append {
-    align-items: center;
-
-    i {
-        color: #868e96;
-        margin: 0;
-        vertical-align: middle;
-        font-size: 20px;
-        height: 20px;
-        width: 20px;
-    }
 }
 
 .modchoosercontainer .optionscontainer,
@@ -2042,6 +2037,15 @@ nav.navbar .logo img {
     max-height: 35px;
 }
 
+.nav.usernav {
+    .nav-item {
+        display: flex;
+    }
+    .usermenu .dropdown-toggle {
+        padding: 0 0.5rem;
+    }
+}
+
 /** Header-bar styles **/
 .page-context-header {
     // We need to be explicit about the height of the header.
@@ -2329,13 +2333,34 @@ $footer-link-color: $bg-inverse-link-color !default;
 }
 
 // Make links in a menu clickable anywhere in the row.
-.dropdown-item a {
-    display: block;
-    width: 100%;
-    color: $body-color;
-}
-.dropdown-item:active a {
-    color: $dropdown-link-active-color;
+.dropdown-item {
+    a {
+        display: block;
+        width: 100%;
+        color: $body-color;
+    }
+    &:active,
+    &:hover,
+    &:focus,
+    &:focus-within {
+        outline: 0;
+        background-color: $dropdown-link-hover-bg;
+        a {
+            color: $dropdown-link-active-color;
+        }
+    }
+    &[aria-current="true"] {
+        position: relative;
+        display: flex;
+        align-items: center;
+        &:before {
+            @include fa-icon();
+            content: $fa-var-circle;
+            position: absolute;
+            left: 0.4rem;
+            font-size: 0.7rem;
+        }
+    }
 }
 
 .competency-tree {
@@ -2387,12 +2412,6 @@ $footer-link-color: $bg-inverse-link-color !default;
     }
 }
 
-.open.atto_menu > .dropdown-menu {
-    display: block;
-}
-div.editor_atto_toolbar button .icon {
-    color: $gray-700;
-}
 .w-auto {
     width: auto;
 }
@@ -2465,6 +2484,10 @@ body.h5p-embed {
 
 .text-break {
     overflow-wrap: break-word !important; /* stylelint-disable-line declaration-no-important */
+}
+
+.word-break {
+    word-break: break-word !important; /* stylelint-disable-line declaration-no-important */
 }
 
 .z-index-0 {
@@ -2715,4 +2738,8 @@ $picker-emojis-per-row: 7 !default;
             border-width: 0.125rem;
         }
     }
+}
+.core_payment_gateways_modal .custom-control-label::before,
+.core_payment_gateways_modal .custom-control-label::after {
+    top: 45%;
 }

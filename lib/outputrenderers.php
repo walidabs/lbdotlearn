@@ -129,7 +129,7 @@ class renderer_base {
                 // Don't allow the JavaScript helper to be executed from within another
                 // helper. If it's allowed it can be used by users to inject malicious
                 // JS into the page.
-                'blacklistednestedhelpers' => ['js']));
+                'disallowednestedhelpers' => ['js']));
 
         }
 
@@ -1385,15 +1385,20 @@ class core_renderer extends renderer_base {
     public function footer() {
         global $CFG, $DB;
 
+        $output = '';
+
         // Give plugins an opportunity to touch the page before JS is finalized.
         $pluginswithfunction = get_plugins_with_function('before_footer', 'lib.php');
         foreach ($pluginswithfunction as $plugins) {
             foreach ($plugins as $function) {
-                $function();
+                $extrafooter = $function();
+                if (is_string($extrafooter)) {
+                    $output .= $extrafooter;
+                }
             }
         }
 
-        $output = $this->container_end_all(true);
+        $output .= $this->container_end_all(true);
 
         $footer = $this->opencontainers->pop('header/footer');
 
@@ -1420,8 +1425,7 @@ class core_renderer extends renderer_base {
         if (!empty($this->page->context->id)) {
             $this->page->requires->js_call_amd('core/notification', 'init', array(
                 $this->page->context->id,
-                \core\notification::fetch_as_array($this),
-                isloggedin()
+                \core\notification::fetch_as_array($this)
             ));
         }
         $footer = str_replace($this->unique_end_html_token, $this->page->requires->get_end_code(), $footer);
@@ -2691,7 +2695,7 @@ $iconprogress
 EOD;
         if ($options->env != 'url') {
             $html .= <<<EOD
-    <div id="file_info_{$client_id}" class="mdl-left filepicker-filelist border" style="position: relative">
+    <div id="file_info_{$client_id}" class="mdl-left filepicker-filelist" style="position: relative">
     <div class="filepicker-filename">
         <div class="filepicker-container">$currentfile<div class="dndupload-message">$strdndenabled <br/><div class="dndupload-arrow"></div></div></div>
         <div class="dndupload-progressbars"></div>
@@ -3217,31 +3221,13 @@ EOD;
             return '';
         }
 
-        if ($id == false) {
-            $id = uniqid();
-        } else {
-            // Needs to be cleaned, we use it for the input id.
-            $id = clean_param($id, PARAM_ALPHANUMEXT);
-        }
-
-        // JS to animate the form.
-        $this->page->requires->js_call_amd('core/search-input', 'init', array($id));
-
-        $searchicon = html_writer::tag('div', $this->pix_icon('a/search', get_string('search', 'search'), 'moodle'),
-            array('role' => 'button', 'tabindex' => 0));
-        $formattrs = array('class' => 'search-input-form', 'action' => $CFG->wwwroot . '/search/index.php');
-        $inputattrs = array('type' => 'text', 'name' => 'q', 'placeholder' => get_string('search', 'search'),
-            'size' => 13, 'tabindex' => -1, 'id' => 'id_q_' . $id, 'class' => 'form-control');
-
-        $contents = html_writer::tag('label', get_string('enteryoursearchquery', 'search'),
-            array('for' => 'id_q_' . $id, 'class' => 'accesshide')) . html_writer::empty_tag('input', $inputattrs);
-        if ($this->page->context && $this->page->context->contextlevel !== CONTEXT_SYSTEM) {
-            $contents .= html_writer::empty_tag('input', ['type' => 'hidden',
-                    'name' => 'context', 'value' => $this->page->context->id]);
-        }
-        $searchinput = html_writer::tag('form', $contents, $formattrs);
-
-        return html_writer::tag('div', $searchicon . $searchinput, array('class' => 'search-input-wrapper nav-link', 'id' => $id));
+        $data = [
+            'action' => new moodle_url('/search/index.php'),
+            'hiddenfields' => (object) ['name' => 'context', 'value' => $this->page->context->id],
+            'inputname' => 'q',
+            'searchstring' => get_string('search'),
+            ];
+        return $this->render_from_template('core/search_input_navbar', $data);
     }
 
     /**
